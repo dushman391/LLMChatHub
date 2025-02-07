@@ -7,6 +7,7 @@ This project leverages multiple AI models to create an interactive chatbot exper
 - **Azure OpenAI Integration**: Option to use Azure OpenAI for generating responses.
 - **Conversation History**: Save and load conversation history.
 - **Interactive UI**: Built with Gradio for a user-friendly interface.
+- **Model Status**: Check the status of installed models and get commands to install missing models.
 
 ## Getting Started 🛠️
 

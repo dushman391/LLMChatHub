@@ -109,19 +109,51 @@ def clear_conversation():
 def get_saved_conversations():
     return [f for f in os.listdir() if f.endswith('.json')]
 
+def get_installed_models():
+    try:
+        output = subprocess.check_output(['ollama', 'list'], text=True)
+        lines = output.strip().split('\n')
+        installed_models = [line.split()[0] for line in lines[1:]]  # Skip the header and get the first column
+        return installed_models
+    except subprocess.CalledProcessError as e:
+        return f"Error: {e.output}"
+
+def check_model_status():
+    installed_models = get_installed_models()
+    if isinstance(installed_models, str):
+        return installed_models  # Return error message if any
+    missing_models = [model for model in models if model not in installed_models]
+    status = f"Installed Models: {', '.join(installed_models)}\n"
+    if missing_models:
+        status += f"Missing Models: {', '.join(missing_models)}\n"
+        status += "Please install the missing models using the following commands:\n"
+        for model in missing_models:
+            status += f"ollama run {model}\n"
+    else:
+        status += "All models are installed."
+    return status
+
 if __name__ == '__main__':
     with gr.Blocks() as demo:
-        model_choice = gr.Dropdown(choices=["AzureOpen AI"] + [f"Ollama {model}" for model in models], label="Choose Model", value=None)
-        chatbot = gr.Chatbot()
-        user_input = gr.Textbox(placeholder="Type your message here...")
-        clear_button = gr.Button("Clear")
-        save_button = gr.Button("Save Conversation")
-        load_dropdown = gr.Dropdown(choices=get_saved_conversations(), label="Load Conversation")
-        load_button = gr.Button("Load")
+        with gr.Tabs():
+            with gr.TabItem("Chat"):
+                model_choice = gr.Dropdown(choices=["AzureOpen AI"] + [f"Ollama {model}" for model in models], label="Choose Model", value=None)
+                chatbot = gr.Chatbot()
+                user_input = gr.Textbox(placeholder="Type your message here...")
+                clear_button = gr.Button("Clear")
+                save_button = gr.Button("Save Conversation")
+                load_dropdown = gr.Dropdown(choices=get_saved_conversations(), label="Load Conversation")
+                load_button = gr.Button("Load")
 
-        user_input.submit(sample_prompt, inputs=[user_input, model_choice], outputs=chatbot)
-        clear_button.click(clear_conversation, None, chatbot)
-        save_button.click(lambda: save_conversation(loaded_filename), None, chatbot)
-        load_button.click(load_conversation, inputs=[load_dropdown], outputs=chatbot)
+                user_input.submit(sample_prompt, inputs=[user_input, model_choice], outputs=chatbot)
+                clear_button.click(clear_conversation, None, chatbot)
+                save_button.click(lambda: save_conversation(loaded_filename), None, chatbot)
+                load_button.click(load_conversation, inputs=[load_dropdown], outputs=chatbot)
+
+            with gr.TabItem("Model Status"):
+                model_status = gr.Textbox(label="Model Status", interactive=False)
+                refresh_button = gr.Button("Refresh")
+
+                refresh_button.click(lambda: check_model_status(), None, model_status)
 
     demo.launch()
