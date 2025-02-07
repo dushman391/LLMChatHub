@@ -7,15 +7,20 @@ from datetime import datetime
 import subprocess
 from models_config import models  # Import the model list
 
-# Initialize AzureOpenAI model
-azure_model = AzureChatOpenAI(
-    openai_api_version="2023-06-01-preview",
-    azure_deployment="gpt4",
-)
-azure_url = os.getenv("AZURE_OPENAI_ENDPOINT")
-azure_key = os.getenv("AZURE_OPENAI_API_KEY")
-env = '[{"model": "gpt4","base_url": "'+ azure_url +'","api_key": "'+ azure_key +'", "api_type": "azure", "api_version": "2024-02-15-preview"}]'
-os.environ["KAIT_OPENAI_KEY"] = env
+def get_azure_model():
+    azure_url = os.getenv("AZURE_OPENAI_ENDPOINT")
+    azure_key = os.getenv("AZURE_OPENAI_API_KEY")
+    if not azure_url or not azure_key:
+        print("Azure OpenAI credentials are not set. Skipping Azure model initialization.")
+        return None
+    env = '[{"model": "gpt4","base_url": "'+ azure_url +'","api_key": "'+ azure_key +'", "api_type": "azure", "api_version": "2024-02-15-preview"}]'
+    os.environ["KAIT_OPENAI_KEY"] = env
+    return AzureChatOpenAI(
+        openai_api_version="2023-06-01-preview",
+        azure_deployment="gpt4",
+        azure_api_key=azure_key,
+        azure_base_url=azure_url
+    )
 
 def is_process_running(process_name):
     # Check if there is any running process that contains the given name process_name.
@@ -87,6 +92,9 @@ def sample_prompt(user_question, model_choice):
     conversation_history.append(("User", user_question))
     prompt = "\n".join([f"{role}: {message}" for role, message in conversation_history]) + "\nAI:"
     if model_choice == "AzureOpen AI":
+        azure_model = get_azure_model()
+        if azure_model is None:
+            return [("Error", "Azure OpenAI credentials are not set.")]
         response = azure_model.invoke(prompt).content
     else:
         response = ollama_model_invoke(prompt, model_choice.split()[1])
