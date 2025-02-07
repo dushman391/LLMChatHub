@@ -22,30 +22,6 @@ def get_azure_model():
         azure_base_url=azure_url
     )
 
-def is_process_running(process_name):
-    # Check if there is any running process that contains the given name process_name.
-    try:
-        output = subprocess.check_output(['pgrep', '-f', process_name])
-        return True  # Process is running
-    except subprocess.CalledProcessError:
-        return False  # No such process
-
-def start_ollama(model_name):
-    command = ['ollama', 'run', model_name]
-    print(f"Starting {command}")
-    subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-def ensure_models_running():
-    for model in models:
-        process_name = f'ollama run {model}'
-        if not is_process_running(process_name):
-            start_ollama(model)
-            print(f"Started {model}")
-        else:
-            print(f"{model} is already running.")
-
-ensure_models_running()
-
 def ollama_model_invoke(prompt, model_name):
     url = "http://localhost:11434/api/generate"
     headers = {"Content-Type": "application/json"}
@@ -85,7 +61,7 @@ def load_conversation(filename):
     loaded_filename = filename
     return conversation_history
 
-def sample_prompt(user_question, model_choice):
+def handle_user_input(user_question, model_choice):
     global conversation_history
     if not model_choice:
         return [("Error", "Model choice is not selected.")]
@@ -145,7 +121,7 @@ if __name__ == '__main__':
                 load_dropdown = gr.Dropdown(choices=get_saved_conversations(), label="Load Conversation")
                 load_button = gr.Button("Load")
 
-                user_input.submit(sample_prompt, inputs=[user_input, model_choice], outputs=chatbot)
+                user_input.submit(handle_user_input, inputs=[user_input, model_choice], outputs=chatbot)
                 clear_button.click(clear_conversation, None, chatbot)
                 save_button.click(lambda: save_conversation(loaded_filename), None, chatbot)
                 load_button.click(load_conversation, inputs=[load_dropdown], outputs=chatbot)

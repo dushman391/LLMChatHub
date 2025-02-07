@@ -34,6 +34,7 @@ Access the UI: Open your browser and go to `http://localhost:7860`.
 - **Switch Models Mid-Conversation**: Select a different model at any time, and the conversation history will be seamlessly transferred to the new model.
 - **Save Conversations**: Click the "Save Conversation" button to save the chat history.
 - **Load Conversations**: Use the dropdown to select and load previous conversations.
+- **Adding New models**: Go to models_config.py and add the model id from Ollama Model Library. Rerun the app.py, click on "Model Status" and hit refresh. 
 
 ### Environment Variables 🌐
 - `AZURE_OPENAI_ENDPOINT`: Your Azure OpenAI endpoint.
