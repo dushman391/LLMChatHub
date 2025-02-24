@@ -45,14 +45,17 @@ def generate_conversation_name(conversation_history):
     return response.strip()
 
 def save_conversation(filename=None):
-    global conversation_history
+    global conversation_history, loaded_filename
     if filename is None:
+        # If no filename is provided, generate a new filename
         conversation_name = generate_conversation_name(conversation_history)
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         filename = f"{conversation_name} - {timestamp}.json"
-    with open(filename, 'w') as file:
+        loaded_filename = filename  # Update loaded_filename with the new file
+    
+    with open(loaded_filename, 'w') as file:
         json.dump(conversation_history, file)
-    return conversation_history  # Return the conversation history instead of the filename
+    return conversation_history
 
 def load_conversation(filename):
     global conversation_history, loaded_filename
@@ -111,6 +114,7 @@ def check_model_status():
 
 if __name__ == '__main__':
     with gr.Blocks() as demo:
+        gr.Markdown("# Welcome to LLM Chat Hub")  # Add this line to display the header at the top
         with gr.Tabs():
             with gr.TabItem("Chat"):
                 model_choice = gr.Dropdown(choices=["AzureOpen AI"] + [f"Ollama {model}" for model in models], label="Choose Model", value=None)
@@ -123,8 +127,9 @@ if __name__ == '__main__':
 
                 user_input.submit(handle_user_input, inputs=[user_input, model_choice], outputs=chatbot)
                 clear_button.click(clear_conversation, None, chatbot)
-                save_button.click(lambda: save_conversation(loaded_filename), None, chatbot)
+                save_button.click(lambda: save_conversation(), None, chatbot)
                 load_button.click(load_conversation, inputs=[load_dropdown], outputs=chatbot)
+                load_button.click(lambda: gr.update(choices=get_saved_conversations()), None, load_dropdown)  # Update dropdown choices
 
             with gr.TabItem("Model Status"):
                 model_status = gr.Textbox(label="Model Status", interactive=False)
