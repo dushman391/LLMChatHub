@@ -137,6 +137,7 @@ if __name__ == '__main__':
                 user_input.submit(handle_user_input, inputs=[user_input, model_choice], outputs=chatbot)
                 clear_button.click(clear_conversation, None, chatbot)
                 save_button.click(lambda: save_conversation(), None, chatbot)
+                save_button.click(lambda: gr.update(choices=get_saved_conversations()), None, load_dropdown)  # Refresh dropdown choices
                 load_button.click(load_conversation, inputs=[load_dropdown], outputs=chatbot)
                 load_button.click(lambda: gr.update(choices=get_saved_conversations()), None, load_dropdown)  # Update dropdown choices
 
