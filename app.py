@@ -45,16 +45,25 @@ def generate_conversation_name(conversation_history):
     return response.strip()
 
 def save_conversation(filename=None):
+    """Save the current conversation to ``filename``.
+
+    If no filename is supplied, a name is generated automatically. The
+    ``loaded_filename`` global is updated to always reflect the file that was
+    written so subsequent saves work as expected.
+    """
     global conversation_history, loaded_filename
+
     if filename is None:
         # If no filename is provided, generate a new filename
         conversation_name = generate_conversation_name(conversation_history)
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         filename = f"{conversation_name} - {timestamp}.json"
-        loaded_filename = filename  # Update loaded_filename with the new file
-    
-    with open(loaded_filename, 'w') as file:
+
+    loaded_filename = filename  # remember where the conversation was saved
+
+    with open(filename, "w") as file:
         json.dump(conversation_history, file)
+
     return conversation_history
 
 def load_conversation(filename):
